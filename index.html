@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<title>PRO STOCK | Mercado Virtual</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07111f;color:#eef4ff;font-family:Arial,sans-serif}
+header{padding:20px;background:#0c192a;border-bottom:1px solid #203149;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:23px;font-weight:900;letter-spacing:1px}
+.logo span{color:#20d69b}
+.status{font-size:11px;color:#20d69b}
+main{padding:18px;max-width:850px;margin:auto}
+h2{font-size:17px}
+.muted{color:#91a2b9;font-size:13px}
+.card{background:#101f32;border:1px solid #263950;border-radius:14px;padding:17px;margin:14px 0}
+.balance{font-size:30px;font-weight:bold;margin:10px 0}
+.green{color:#20d69b}
+.red{color:#ff6576}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#172a40;border-radius:10px;padding:12px}
+.stat strong{display:block;margin-top:8px;font-size:18px}
+input,select{width:100%;padding:13px;border-radius:9px;background:#091626;color:white;border:1px solid #344a63;margin:7px 0}
+button{border:0;border-radius:9px;padding:12px;color:white;font-weight:bold;cursor:pointer}
+.buy{background:#078b65}
+.sell{background:#b83e54}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stock{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #29394d;gap:8px}
+.stock:last-child{border:0}
+.stockname{font-weight:bold}
+.symbol{font-size:12px;color:#91a2b9;margin-top:5px}
+.price{text-align:right;font-weight:bold}
+.change{text-align:right;font-size:12px;margin-top:5px}
+footer{text-align:center;color:#70839b;font-size:11px;padding:25px}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">PRO <span>STOCK</span></div>
+ <div class="status">● MERCADO DEMO</div>
+</header>
+
+<main>
+ <h2>Panel de inversión</h2>
+ <p class="muted">Bienvenido a tu mercado bursátil virtual.</p>
+
+ <section class="card">
+  <div class="muted">CAPITAL VIRTUAL DISPONIBLE</div>
+  <div class="balance" id="cash">$100,000.00</div>
+  <div class="stats">
+   <div class="stat">
+    <span class="muted">Valor invertido</span>
+    <strong id="invested">$0.00</strong>
+   </div>
+   <div class="stat">
+    <span class="muted">Acciones en cartera</span>
+    <strong id="count">0</strong>
+   </div>
+  </div>
+ </section>
+
+ <section class="card">
+  <h2>📊 Mercado de acciones</h2>
+  <input id="search" placeholder="Buscar empresa o símbolo..." oninput="renderStocks()">
+  <div id="stocks"></div>
+ </section>
+
+ <section class="card" id="trade">
+  <h2>💹 Comprar o vender</h2>
+  <label class="muted">Selecciona una empresa</label>
+  <select id="company"></select>
+  <label class="muted">Cantidad de acciones</label>
+  <input id="quantity" type="number" min="1" step="1" value="1">
+  <div class="actions">
+   <button class="buy" onclick="trade('buy')">COMPRAR</button>
+   <button class="sell" onclick="trade('sell')">VENDER</button>
+  </div>
+  <p id="message" class="muted">Operaciones con dinero virtual, sin riesgo financiero real.</p>
+ </section>
+
+ <section class="card">
+  <h2>💼 Mi portafolio</h2>
+  <div id="portfolio" class="muted">Todavía no tienes acciones.</div>
+ </section>
+
+ <footer>
+  PRO STOCK © 2026<br>
+  Simulador educativo. Precios ficticios de demostración.
+  No representa cotizaciones bursátiles reales.
+ </footer>
+</main>
+
+<script>
+const stocks=[
+ {name:"Apple",symbol:"AAPL",price:225.50,change:1.42},
+ {name:"Microsoft",symbol:"MSFT",price:415.20,change:0.85},
+ {name:"NVIDIA",symbol:"NVDA",price:142.80,change:2.76},
+ {name:"Amazon",symbol:"AMZN",price:215.30,change:-0.65},
+ {name:"Tesla",symbol:"TSLA",price:330.40,change:1.15},
+ {name:"Google",symbol:"GOOGL",price:175.60,change:-0.32}
+];
+
+let cash=100000;
+let portfolio={};
+
+const money=n=>new Intl.NumberFormat("es-MX",{
+ style:"currency",currency:"USD"
+}).format(n);
+
+function renderStocks(){
+ const term=document.getElementById("search").value.toLowerCase();
+ document.getElementById("stocks").innerHTML=stocks
+ .filter(s=>(s.name+s.symbol).toLowerCase().includes(term))
+ .map(s=>`
+ <div class="stock">
+  <div><div class="stockname">${s.name}</div>
+  <div class="symbol">${s.symbol}</div></div>
+  <div><div class="price">${money(s.price)}</div>
+  <div class="change ${s.change>=0?'green':'red'}">${s.change>=0?'+':''}${s.change}%</div></div>
+ </div>`).join("");
+}
+
+function renderSelect(){
+ document.getElementById("company").innerHTML=stocks.map(s=>
+ `<option value="${s.symbol}">${s.name} (${s.symbol})</option>`
+ ).join("");
+}
+
+function update(){
+ document.getElementById("cash").textContent=money(cash);
+ let invested=0,total=0;
+ let html="";
+ stocks.forEach(s=>{
+  let qty=portfolio[s.symbol]||0;
+  invested+=qty*s.price;
+  total+=qty;
+  if(qty>0){
+   html+=`<div class="stock">
+   <div><b>${s.name}</b><div class="symbol">${s.symbol}</div></div>
+   <div class="price">${qty} acciones<br>${money(qty*s.price)}</div>
+   </div>`;
+  }
+ });
+ document.getElementById("invested").textContent=money(invested);
+ document.getElementById("count").textContent=total;
+ document.getElementById("portfolio").innerHTML=html||"Todavía no tienes acciones.";
+}
+
+function trade(type){
+ const symbol=document.getElementById("company").value;
+ const qty=Number(document.getElementById("quantity").value);
+ const s=stocks.find(x=>x.symbol===symbol);
+ const message=document.getElementById("message");
+
+ if(!Number.isInteger(qty)||qty<1){
+  message.textContent="Introduce una cantidad válida.";
+  message.className="red";
+  return;
+ }
+ const cost=s.price*qty;
+ portfolio[symbol]=portfolio[symbol]||0;
+
+ if(type==="buy"){
+  if(cost>cash){
+   message.textContent="Saldo virtual insuficiente.";
+   message.className="red";
+   return;
+  }
+  cash-=cost;
+  portfolio[symbol]+=qty;
+  message.textContent="¡Compra virtual realizada correctamente!";
+ }else{
+  if(qty>portfolio[symbol]){
+   message.textContent="No tienes suficientes acciones para vender.";
+   message.className="red";
+   return;
+  }
+  cash+=cost;
+  portfolio[symbol]-=qty;
+  message.textContent="¡Venta virtual realizada correctamente!";
+ }
+ message.className="green";
+ update();
+}
+
+renderStocks();
+renderSelect();
+update();
+</script>
+</body>
+</html>
